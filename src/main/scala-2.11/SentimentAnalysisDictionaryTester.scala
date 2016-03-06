@@ -16,6 +16,7 @@ object SentimentAnalysisDictionaryTester {
     // Use spark to bring in the dictionary and manipulate it.
     // Then turn it into a HashMap
     val dictSourceFile = getClass.getResource("/AFINN-111.txt")
+    println(dictSourceFile.toString)
     val sentimentDictionary = sc.textFile(dictSourceFile.toString, 1)
     val sentDictPairedRDD = sentimentDictionary.map(line => {
       val splitLine = line.split("\t")
@@ -36,7 +37,8 @@ object SentimentAnalysisDictionaryTester {
     val sentimentMatches = textSentimentDF.map(row => {
       var sentimentCount = 0L
       var sentiment = 0L
-      val words = row(0).toString().split(" ")
+      //val words = row(0).toString().split(" ")
+      val words = tokenize(row(0).toString)
       for (word <- words){
         if (dictionaryMap.contains(word)){
           sentimentCount = sentimentCount + dictionaryMap(word)
@@ -53,5 +55,9 @@ object SentimentAnalysisDictionaryTester {
 
     println("Model Accuracy: " + 100 * sentimentMatches.filter(x => x._1 == x._2).count / sentimentMatches.count + "%")
 
+  }
+
+  def tokenize(line: String): Array[String] = {
+    line.toLowerCase.replaceAll("""[\p{Punct}]""", " ").replaceAll(" +", " ").trim.split(" ")
   }
 }
